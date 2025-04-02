@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Library Items</h2>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <form action="{{ url_for('items') }}" method="get" style="flex: 1; margin-right: 10px;">
+        <div class="form-group" style="display: flex; gap: 10px;">
+            <input type="text" name="search" value="{{ search_query }}" class="form-control" placeholder="Search by title, author, or type" style="flex: 1;">
+            <button type="submit" class="btn" style="width: auto;">Search</button>
+        </div>
+    </form>
+    <a href="#donate-form" class="btn" style="padding: 6px 12px; text-decoration: none;">Donate a Book</a>
+</div>
+
+{% if items %}
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Branch</th>
+            <th>Availability</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item['title'] }}</td>
+            <td>{{ item['author'] }}</td>
+            <td>{{ item['type'] }}</td>
+            <td>{{ item['status'] }}</td>
+            <td>{{ item['branch_id'] }}</td>
+            <td>
+                {% if item['status'] == 'Available' %}
+                <form action="{{ url_for('items') }}" method="post">
+                    <input type="hidden" name="item_id" value="{{ item['item_id'] }}">
+                    <select name="cust_id" required class="form-control" style="width: 150px; display: inline-block; padding: 5px; border-radius: 4px; margin-right: 5px; height: 32px; font-size: 14px; background-color: var(--darker-bg); color: var(--light-text);">
+                        <option value="">Select Customer</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer['cust_id'] }}" style="background-color: var(--darker-bg); color: var(--light-text);">{{ customer['first_name'] }} {{ customer['last_name'] }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-small" style="display: inline-block; padding: 5px 10px; vertical-align: middle;">Borrow</button>
+                </form>
+                {% elif item['status'] == 'Borrowed' %}
+                <span style="display: inline-block; margin-right: 10px;">Not Available</span>
+                <form action="{{ url_for('items') }}" method="post" style="display: inline-block;">
+                    <input type="hidden" name="form_type" value="return">
+                    <input type="hidden" name="item_id" value="{{ item['item_id'] }}">
+                    <button type="submit" class="btn btn-small" style="padding: 5px 10px;">Return</button>
+                </form>
+                {% else %}
+                <span style="display: inline-block; margin-right: 10px;">Not Available</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No items found matching your criteria.</p>
+{% endif %}
+
+<div id="donate-form" style="margin-top: 50px; padding: 20px; border: 1px solid var(--primary-dark); border-radius: 10px; background-color: var(--darker-bg); color: var(--light-text);">
+    <h3 style="margin-top: 0; color: var(--primary-color);">Donate a Book to the Library</h3>
+    <form action="{{ url_for('items') }}" method="post" style="max-width: 600px;">
+        <input type="hidden" name="form_type" value="donation">
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="title">Book Title:</label>
+            <input type="text" name="title" id="title" class="form-control" required>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="author">Author:</label>
+            <input type="text" name="author" id="author" class="form-control" required>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="type">Type:</label>
+            <select name="type" id="type" class="form-control" required>
+                <option value="">Select Type</option>
+                <option value="Print">Print</option>
+                <option value="Online">Online</option>
+                <option value="Magazine">Magazine</option>
+                <option value="Journal">Journal</option>
+                <option value="CD">CD</option>
+                <option value="Record">Record</option>
+            </select>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="branch_id">Branch:</label>
+            <select name="branch_id" id="branch_id" class="form-control" required>
+                <option value="">Select Branch</option>
+                {% for branch in branches %}
+                <option value="{{ branch['branch_id'] }}">{{ branch['branch_id'] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit" class="btn" style="width: auto;">Donate</button>
+    </form>
+</div>
+{% endblock %}

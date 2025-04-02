@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>All Tables</h2>
+
+<div class="section">
+    <h3>Customers</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td>{{ customer['cust_id'] }}</td>
+                <td>{{ customer['first_name'] }} {{ customer['last_name'] }}</td>
+                <td>{{ customer['email'] }}</td>
+                <td>{{ customer['phone'] }}</td>
+                <td>{{ customer['membership_status'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Items</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Type</th>
+                <th>Branch</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item['item_id'] }}</td>
+                <td>{{ item['title'] }}</td>
+                <td>{{ item['author'] }}</td>
+                <td>{{ item['type'] }}</td>
+                <td>{{ item['branch_id'] }}</td>
+                <td>{{ item['status'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Borrowed Items</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Item</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in borrowed %}
+            <tr>
+                <td>{{ item['first_name'] }} {{ item['last_name'] }} (ID: {{ item['cust_id'] }})</td>
+                <td>{{ item['title'] }} (ID: {{ item['item_id'] }})</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Events</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Event Name</th>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Branch</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td>{{ event['event_id'] }}</td>
+                <td>{{ event['event_name'] }}</td>
+                <td>{{ event['event_type'] }}</td>
+                <td>{{ event['date'] }}</td>
+                <td>{{ event['time'] }}</td>
+                <td>{{ event['branch_id'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Event Registrations</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Event</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reg in registered %}
+            <tr>
+                <td>{{ reg['first_name'] }} {{ reg['last_name'] }} (ID: {{ reg['cust_id'] }})</td>
+                <td>{{ reg['event_name'] }} (ID: {{ reg['event_id'] }})</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Fines</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Item</th>
+                <th>Amount</th>
+                <th>Paid Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fine in fines %}
+            <tr>
+                <td>{{ fine['fine_id'] }}</td>
+                <td>{{ fine['first_name'] }} {{ fine['last_name'] }}</td>
+                <td>{{ fine['title'] }}</td>
+                <td>${{ fine['amount'] }}</td>
+                <td>{{ 'Paid' if fine['paid_status'] else 'Not Paid' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Employees</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Branch</th>
+                <th>Email</th>
+                <th>Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+            <tr>
+                <td>{{ employee['employee_id'] }}</td>
+                <td>{{ employee['first_name'] }} {{ employee['last_name'] }}</td>
+                <td>{{ employee['role'] }}</td>
+                <td>{{ employee['branch_id'] }}</td>
+                <td>{{ employee['email'] }}</td>
+                <td>{{ employee['phone'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Branches</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Branch ID</th>
+                <th>Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for branch in branches %}
+            <tr>
+                <td>{{ branch['branch_id'] }}</td>
+                <td>{{ branch['phone'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Rooms</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Room ID</th>
+                <th>Branch</th>
+                <th>Location</th>
+                <th>Capacity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for room in rooms %}
+            <tr>
+                <td>{{ room['room_id'] }}</td>
+                <td>{{ room['branch_id'] }}</td>
+                <td>{{ room['location'] }}</td>
+                <td>{{ room['capacity'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Run Custom SQL Query</h2>
+
+<form action="{{ url_for('query') }}" method="post">
+    <div class="form-group">
+        <label for="query">Enter your SQL query:</label>
+        <textarea id="query" name="query" class="query-box" required>{{ query }}</textarea>
+    </div>
+    <button type="submit" class="btn">Run Query</button>
+</form>
+
+{% if error %}
+<div style="margin-top: 20px; padding: 15px; background-color: rgba(255, 0, 0, 0.1); border-radius: 10px;">
+    <h3>Error</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+{% if result %}
+<div style="margin-top: 20px;">
+    <h3>Query Results</h3>
+    <table>
+        <thead>
+            <tr>
+                {% for column in column_names %}
+                <th>{{ column }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in result %}
+            <tr>
+                {% for column in column_names %}
+                <td>{{ row[column] }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

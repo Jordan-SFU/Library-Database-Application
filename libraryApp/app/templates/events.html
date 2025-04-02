@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Library Events</h2>
+
+<form action="{{ url_for('events') }}" method="get" style="margin-bottom: 20px;">
+    <div class="form-group" style="display: flex; gap: 10px;">
+        <input type="text" name="search" value="{{ search_query }}" class="form-control" placeholder="Search by event name, type, or audience" style="flex: 1;">
+        <button type="submit" class="btn" style="width: auto;">Search</button>
+    </div>
+</form>
+
+{% if events %}
+<table>
+    <thead>
+        <tr>
+            <th>Event Name</th>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Branch</th>
+            <th>Audience</th>
+            <th>Availability</th>
+            <th>Register</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for event in events %}
+        <tr>
+            <td>{{ event['event_name'] }}</td>
+            <td>{{ event['event_type'] }}</td>
+            <td>{{ event['date'] }}</td>
+            <td>{{ event['time'] }}</td>
+            <td>{{ event['branch_id'] }}</td>
+            <td>{{ event['recommended_audience'] }}</td>
+            <td>{{ event['registered_count'] }}/{{ event['capacity'] }}</td>
+            <td>
+                {% if event['registered_count'] < event['capacity'] %}
+                <form action="{{ url_for('events') }}" method="post">
+                    <input type="hidden" name="event_id" value="{{ event['event_id'] }}">
+                    <select name="cust_id" required class="form-control" style="width: 150px; display: inline-block; padding: 5px; border-radius: 4px; margin-right: 5px; height: 32px; font-size: 14px;">
+                        <option value="">Select Customer</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer['cust_id'] }}">{{ customer['first_name'] }} {{ customer['last_name'] }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-small" style="display: inline-block; padding: 5px 10px; vertical-align: middle;">Register</button>
+                </form>
+                {% else %}
+                <span>Full</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No events found matching your criteria.</p>
+{% endif %}
+{% endblock %}

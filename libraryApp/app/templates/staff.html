@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Library Staff</h2>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h3 style="margin: 0;">Contact any of our staff for help!</h3>
+    <a href="#volunteer-form" class="btn" style="padding: 6px 12px; text-decoration: none;">Volunteer</a>
+</div>
+
+{% if employees %}
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Branch</th>
+            <th>Email</th>
+            <th>Phone</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for employee in employees %}
+        <tr>
+            <td>{{ employee['first_name'] }} {{ employee['last_name'] }}</td>
+            <td>{{ employee['role'] }}</td>
+            <td>{{ employee['branch_name'] }}</td>
+            <td>{{ employee['email'] }}</td>
+            <td>{{ employee['phone'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No staff information available.</p>
+{% endif %}
+
+<div id="volunteer-form" style="margin-top: 50px; padding: 20px; border: 1px solid var(--primary-dark); border-radius: 10px; background-color: var(--darker-bg); color: var(--light-text);">
+    <h3 style="margin-top: 0; color: var(--primary-color);">Volunteer at the Library</h3>
+    <form action="{{ url_for('staff') }}" method="post" style="max-width: 600px;">
+        <input type="hidden" name="form_type" value="volunteer">
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="first_name">First Name:</label>
+            <input type="text" name="first_name" id="first_name" class="form-control" required>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="last_name">Last Name:</label>
+            <input type="text" name="last_name" id="last_name" class="form-control" required>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" class="form-control" required>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="phone">Phone:</label>
+            <input type="tel" name="phone" id="phone" class="form-control">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="branch_id_vol">Preferred Branch:</label>
+            <select name="branch_id" id="branch_id_vol" class="form-control" required>
+                <option value="">Select Branch</option>
+                {% for branch in branches %}
+                <option value="{{ branch['branch_id'] }}">{{ branch['branch_id'] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit" class="btn" style="width: auto;">Submit Application</button>
+    </form>
+</div>
+{% endblock %}
