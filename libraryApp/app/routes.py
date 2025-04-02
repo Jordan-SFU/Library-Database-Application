@@ -1,16 +1,19 @@
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, session, flash
 from app import app
 import sqlite3
 import os
 
-DATABASE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'library.db')
+app.secret_key = 'library_app_secret_key'
 
+# connect to the database
+DATABASE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'library.db')
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     print(f"Connected to database at {DATABASE}")
     return conn
 
+# main page
 @app.route('/')
 @app.route('/index')
 def index():
@@ -19,6 +22,10 @@ def index():
 @app.route('/items', methods=['GET', 'POST'])
 def items():
     if request.method == 'POST':
+        # check if user is logged in or making a donation
+        if 'user_id' not in session and request.form.get('form_type') != 'donation':
+            return redirect(url_for('register'))
+            
         form_type = request.form.get('form_type')
         
         if form_type == 'donation':
@@ -27,6 +34,7 @@ def items():
             item_type = request.form.get('type')
             branch_id = request.form.get('branch_id')
             
+            # add donated item to the database
             if title and author and item_type and branch_id:
                 conn = get_db_connection()
                 try:
@@ -40,21 +48,32 @@ def items():
                     pass
                 conn.close()
             return redirect(url_for('items'))
+        # returning an item
         elif form_type == 'return':
             item_id = request.form.get('item_id')
             if item_id:
                 conn = get_db_connection()
                 try:
-                    conn.execute('DELETE FROM Borrowed WHERE item_id = ?', (item_id,))
-                    conn.commit()
+                    # only allow returning if this user borrowed the item
+                    borrowed = conn.execute('''
+                        SELECT * FROM Borrowed 
+                        WHERE item_id = ? AND cust_id = ?
+                    ''', (item_id, session['user_id'])).fetchone()
+                    
+                    # delete the borrowed record
+                    # the triggers in our database automatically update the status of the item
+                    if borrowed:
+                        conn.execute('DELETE FROM Borrowed WHERE item_id = ?', (item_id,))
+                        conn.commit()
                 except sqlite3.Error:
                     pass
                 conn.close()
             return redirect(url_for('items'))
         else:
+            # use current user for borrowing
             item_id = request.form.get('item_id')
-            cust_id = request.form.get('cust_id')
-            if item_id and cust_id:
+            if item_id:
+                cust_id = session['user_id']
                 conn = get_db_connection()
                 item = conn.execute('SELECT * FROM Item WHERE item_id = ?', (item_id,)).fetchone()
                 
@@ -71,6 +90,7 @@ def items():
     search_query = request.args.get('search', '')
     conn = get_db_connection()
     
+    # searching functionality
     if search_query:
         items = conn.execute('''
             SELECT * FROM Item 
@@ -83,16 +103,26 @@ def items():
     
     branches = conn.execute('SELECT * FROM Branch').fetchall()
     
+    borrowed_items = []
+    if 'user_id' in session:
+        borrowed_items = conn.execute('''
+            SELECT item_id FROM Borrowed WHERE cust_id = ?
+        ''', (session['user_id'],)).fetchall()
+        borrowed_items = [item['item_id'] for item in borrowed_items]
+    
     conn.close()
     return render_template('items.html', title='Library Items', items=items, search_query=search_query, 
-                          customers=customers, branches=branches)
+                          customers=customers, branches=branches, borrowed_items=borrowed_items)
 
 @app.route('/events', methods=['GET', 'POST'])
 def events():
     if request.method == 'POST':
+        if 'user_id' not in session:
+            return redirect(url_for('register'))
+            
         event_id = request.form.get('event_id')
-        cust_id = request.form.get('cust_id')
-        if event_id and cust_id:
+        if event_id:
+            cust_id = session['user_id']
             conn = get_db_connection()
             try:
                 conn.execute('INSERT INTO Registered (cust_id, event_id) VALUES (?, ?)', 
@@ -124,13 +154,23 @@ def events():
     
     customers = conn.execute('SELECT * FROM Customer').fetchall()
     
+    registered_events = []
+    if 'user_id' in session:
+        registered_events = conn.execute('''
+            SELECT event_id FROM Registered WHERE cust_id = ?
+        ''', (session['user_id'],)).fetchall()
+        registered_events = [event['event_id'] for event in registered_events]
+    
     conn.close()
-    return render_template('events.html', title='Library Events', events=events, search_query=search_query, customers=customers)
+    return render_template('events.html', title='Library Events', events=events, 
+                          search_query=search_query, customers=customers,
+                          registered_events=registered_events)
 
 @app.route('/all_data')
 def all_data():
     conn = get_db_connection()
     
+    # get everything
     customers = conn.execute('SELECT * FROM Customer').fetchall()
     items = conn.execute('SELECT * FROM Item').fetchall()
     employees = conn.execute('SELECT * FROM Employee').fetchall()
@@ -213,6 +253,7 @@ def staff():
             phone = request.form.get('phone')
             branch_id = request.form.get('branch_id')
             
+            # add the volunteer to the database, automatically assigning them the 'Volunteer' role
             if first_name and last_name and email and branch_id:
                 conn = get_db_connection()
                 try:
@@ -245,3 +286,83 @@ def staff():
                           employees=employees, 
                           branches=branches, 
                           customers=customers,)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    message = ''
+    message_type = 'info'
+    
+    if request.method == 'POST':
+        action_type = request.form.get('action_type')
+        
+        if action_type == 'login':
+
+            email = request.form.get('email')
+            
+            if email:
+                conn = get_db_connection()
+                customer = conn.execute('SELECT * FROM Customer WHERE email = ?', (email,)).fetchone()
+                conn.close()
+                
+                if customer:
+                    session['user_id'] = customer['cust_id']
+                    session['user_name'] = f"{customer['first_name']} {customer['last_name']}"
+                    session['user_email'] = customer['email']
+                    return redirect(url_for('index'))
+                else:
+                    message = 'No account found with that email. Please register.'
+                    message_type = 'error'
+            else:
+                message = 'Please enter your email.'
+                message_type = 'error'
+        
+        elif action_type == 'register':
+            first_name = request.form.get('first_name')
+            last_name = request.form.get('last_name')
+            email = request.form.get('email')
+            phone = request.form.get('phone')
+            
+            if all([first_name, last_name, email]):
+                conn = get_db_connection()
+                
+                existing = conn.execute('SELECT * FROM Customer WHERE email = ?', (email,)).fetchone()
+                
+                if existing:
+                    message = 'An account with this email already exists. Please sign in.'
+                    message_type = 'error'
+                else:
+                    try:
+                        conn.execute('''
+                            INSERT INTO Customer (first_name, last_name, email, phone, membership_status) 
+                            VALUES (?, ?, ?, ?, ?)
+                        ''', (first_name, last_name, email, phone, 'Active'))
+                        conn.commit()
+                        
+                        customer = conn.execute('SELECT * FROM Customer WHERE email = ?', (email,)).fetchone()
+                        if customer:
+                            session['user_id'] = customer['cust_id']
+                            session['user_name'] = f"{customer['first_name']} {customer['last_name']}"
+                            session['user_email'] = customer['email']
+                            message = 'Registration successful! You are now signed in.'
+                            message_type = 'success'
+                    except sqlite3.Error as e:
+                        print(e)
+                        message = 'Registration failed. Please try again.'
+                        message_type = 'error'
+                
+                conn.close()
+            else:
+                message = 'Please fill out all required fields.'
+                message_type = 'error'
+    
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+    
+    return render_template('register.html', title='Sign In / Register', message=message, message_type=message_type)
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    session.pop('user_name', None)
+    session.pop('user_email', None)
+    return redirect(url_for('index'))

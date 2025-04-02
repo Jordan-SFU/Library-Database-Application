@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Sign In / Register</h2>
+
+{% if message %}
+<div style="padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+    {{ message }}
+</div>
+{% endif %}
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+    <div style="flex: 1; min-width: 300px; padding: 20px; border: 1px solid var(--primary-dark); border-radius: 10px; background-color: var(--darker-bg); color: var(--light-text);">
+        <h3 style="margin-top: 0; color: var(--primary-color);">Sign In</h3>
+        
+        <form action="{{ url_for('register') }}" method="post">
+            <input type="hidden" name="action_type" value="login">
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="login-email">Email: </label>
+                <input type="email" name="email" id="login-email" class="form-control" required>
+                <p><em>Go to the 'Tables' page to view all customer emails</em></p>
+            </div>
+            
+            <button type="submit" class="btn" style="width: auto;">Sign In</button>
+        </form>
+    </div>
+
+    <div style="flex: 1; min-width: 300px; padding: 20px; border: 1px solid var(--primary-dark); border-radius: 10px; background-color: var(--darker-bg); color: var(--light-text);">
+        <h3 style="margin-top: 0; color: var(--primary-color);">Register</h3>
+        
+        <form action="{{ url_for('register') }}" method="post">
+            <input type="hidden" name="action_type" value="register">
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="first_name">First Name: </label>
+                <input type="text" name="first_name" id="first_name" class="form-control" required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="last_name">Last Name: </label>
+                <input type="text" name="last_name" id="last_name" class="form-control" required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="email">Email: </label>
+                <input type="email" name="email" id="email" class="form-control" required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="phone">Phone:</label>
+                <input type="tel" name="phone" id="phone" class="form-control">
+            </div>
+            
+            <button type="submit" class="btn" style="width: auto;">Register</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
